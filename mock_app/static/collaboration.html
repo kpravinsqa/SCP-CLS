@@ -1,0 +1,22 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SCP Classic | Collaboration</title>
+<link rel="stylesheet" href="styles.css"><script src="common.js"></script><script src="app.js"></script></head>
+<body><main>
+<h1 data-testid="page-title">Collaborative planning</h1>
+<div class="card"><label for="key">Product · Location</label><select id="key" data-testid="pl-select"></select>
+<ul data-testid="comments" style="padding-left:18px"></ul><p class="muted" data-testid="no-comments" hidden>No comments yet.</p>
+<label for="text">Comment</label><textarea id="text" rows="3" data-testid="comment-text"></textarea><div class="field-error" data-testid="error-text"></div>
+<button class="primary" data-testid="post-comment" id="post">Post comment</button></div></main>
+<script>
+async function loadComments() { const { data } = await API.get("/api/collaboration/comments?key=" + encodeURIComponent($("#key").value));
+  const ul = $('[data-testid="comments"]'); ul.innerHTML = "";
+  data.items.forEach(c => ul.append(el("li", { testid: "comment-" + c.id }, el("strong", {}, c.author + ": "), c.text)));
+  $('[data-testid="no-comments"]').hidden = data.items.length > 0; }
+if (shell("collaboration")) (async () => {
+  (await API.get("/api/forecast?level=PL")).data.rows.forEach(r => $("#key").append(el("option", { value: r.key }, r.key.replace("|", " · "))));
+  $("#key").addEventListener("change", loadComments);
+  $("#post").addEventListener("click", async () => { clearErrors(document);
+    const r = await API.post("/api/collaboration/comments", { key: $("#key").value, text: $("#text").value });
+    if (!r.ok) return showError("text", r.data.error); $("#text").value = ""; toast("Comment posted"); loadComments(); });
+  loadComments();
+})();
+</script></body></html>

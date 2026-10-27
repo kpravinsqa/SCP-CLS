@@ -1,0 +1,31 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SCP Classic | Sign in</title>
+<link rel="stylesheet" href="styles.css"><script src="common.js"></script></head>
+<body><main><div class="card login-box">
+<h1>SCP Classic</h1><p class="muted">Supply chain planning (demo)</p>
+<form id="login-form" novalidate>
+  <label for="username">Username</label><input id="username" data-testid="username">
+  <div class="field-error" data-testid="error-username"></div>
+  <label for="password">Password</label><input id="password" type="password" data-testid="password">
+  <div class="field-error" data-testid="error-password"></div>
+  <label for="locale">Language / region</label>
+  <select id="locale" data-testid="locale">
+    <option value="en-US">English (US)</option><option value="en-GB">English (UK)</option><option value="sv-SE">Svenska (Sverige)</option>
+    <option value="nb-NO">Norsk bokmål (Norge)</option><option value="da-DK">Dansk (Danmark)</option><option value="fi-FI">Suomi (Suomi)</option>
+  </select>
+  <div class="field-error" data-testid="error-form" role="alert"></div>
+  <button class="primary" type="submit" data-testid="login-submit">Sign in</button>
+</form></div></main>
+<script>
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault(); clearErrors(e.target);
+  const username = $("#username").value.trim(), password = $("#password").value, locale = $("#locale").value;
+  let bad = false;
+  if (!username) { showError("username", "Username is required"); bad = true; }
+  if (!password) { showError("password", "Password is required"); bad = true; }
+  if (bad) return;
+  const r = await API.post("/api/auth/login", { username, password, locale });
+  if (!r.ok) return showError("form", r.data.error);
+  sessionStorage.setItem("token", r.data.token); sessionStorage.setItem("user", JSON.stringify(r.data.user));
+  location.href = "forecast.html";
+});
+</script></body></html>

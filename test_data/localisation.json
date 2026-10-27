@@ -1,0 +1,10 @@
+{
+  "locales": [
+    {"id": "en-US", "locale": "en-US", "nav_forecast": "Forecast", "logout": "Logout", "grand_total": "43,200", "grand_value_sek": "SEK 117,585.00"},
+    {"id": "en-GB", "locale": "en-GB", "nav_forecast": "Forecast", "logout": "Logout", "grand_total": "43,200", "grand_value_sek": "SEK 117,585.00"},
+    {"id": "sv-SE", "locale": "sv-SE", "nav_forecast": "Prognos", "logout": "Logga ut", "grand_total": "43 200", "grand_value_sek": "117 585,00 kr"},
+    {"id": "nb-NO", "locale": "nb-NO", "nav_forecast": "Prognose", "logout": "Logg ut", "grand_total": "43 200", "grand_value_sek": "117 585,00 SEK"},
+    {"id": "da-DK", "locale": "da-DK", "nav_forecast": "Prognose", "logout": "Log ud", "grand_total": "43.200", "grand_value_sek": "117.585,00 SEK"},
+    {"id": "fi-FI", "locale": "fi-FI", "nav_forecast": "Ennuste", "logout": "Kirjaudu ulos", "grand_total": "43 200", "grand_value_sek": "117 585,00 SEK"}
+  ]
+}

@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SCP Classic | PlanBot</title>
+<link rel="stylesheet" href="styles.css"><script src="common.js"></script><script src="app.js"></script></head>
+<body><main>
+<h1 data-testid="page-title">PlanBot</h1>
+<div class="card"><div data-testid="chat-log" style="min-height:120px"></div>
+<p class="muted" data-testid="thinking" hidden>PlanBot is thinking…</p>
+<label for="q">Ask a question</label><input id="q" data-testid="bot-input" placeholder="e.g. How is the forecast calculated?">
+<div class="field-error" data-testid="error-question"></div>
+<button class="primary" data-testid="bot-send" id="send">Send</button></div></main>
+<script>
+if (shell("assistant")) $("#send").addEventListener("click", async () => { clearErrors(document);
+  const q = $("#q").value;
+  if (!q.trim()) return showError("question", "Please enter a question");   // never show "thinking" for blank input
+  $('[data-testid="thinking"]').hidden = false;
+  const r = await API.post("/api/bot/ask", { question: q });
+  $('[data-testid="thinking"]').hidden = true;
+  if (!r.ok) return showError("question", r.data.error);
+  const log = $('[data-testid="chat-log"]'); const n = log.children.length / 2;
+  log.append(el("p", { testid: "user-msg-" + n }, el("strong", {}, "You: "), q), el("p", { testid: "bot-msg-" + n }, el("strong", {}, "PlanBot: "), r.data.answer));
+  $("#q").value = ""; });
+</script></body></html>

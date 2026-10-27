@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SCP Classic | Item Parameters</title>
+<link rel="stylesheet" href="styles.css"><script src="common.js"></script><script src="app.js"></script></head>
+<body><main>
+<h1 data-testid="page-title"></h1>
+<div class="card"><table data-testid="items-table"><thead><tr><th>Product</th><th>Description</th><th>Lead time (days)</th><th>MOQ</th><th>Safety stock (days)</th><th></th></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+async function load() { const { data } = await API.get("/api/items"); const tbody = $('[data-testid="items-table"] tbody'); tbody.innerHTML = "";
+  data.items.forEach(i => { const inp = f => el("input", { type: "number", value: i[f], testid: `${i.product}-${f}`, style: "width:110px" });
+    const fields = ["lead_time_days", "moq", "safety_stock_days"]; const inputs = Object.fromEntries(fields.map(f => [f, inp(f)]));
+    tbody.append(el("tr", { testid: "item-" + i.product }, el("td", {}, i.product), el("td", {}, i.description),
+      ...fields.map(f => el("td", {}, inputs[f], el("div", { class: "field-error", testid: `error-${i.product}-${f}` }))),
+      el("td", {}, el("button", { class: "secondary", testid: "save-" + i.product, onclick: async () => {
+        document.querySelectorAll(`[data-testid^="error-${i.product}-"]`).forEach(e => e.textContent = "");
+        const body = Object.fromEntries(fields.map(f => [f, inputs[f].value === "" ? null : Number(inputs[f].value)]));
+        const r = await API.put(`/api/items/${i.product}`, body);
+        if (!r.ok) return showError(`${i.product}-${r.data.field}`, r.data.error); toast(`${i.product} parameters saved`); } }, "Save")))); }); }
+if (shell("items")) { $('[data-testid="page-title"]').textContent = t("items"); load(); }
+</script></body></html>

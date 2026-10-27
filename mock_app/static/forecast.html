@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SCP Classic | Forecast</title>
+<link rel="stylesheet" href="styles.css"><script src="common.js"></script><script src="app.js"></script>
+<style>tr.child td:first-child{padding-left:28px} tr.clickable{cursor:pointer}</style></head>
+<body><main>
+<h1 data-testid="page-title"></h1>
+<div class="card"><div class="row">
+  <div><label for="level">Hierarchy level</label><select id="level" data-testid="level">
+    <option value="PLC">Product · Location · Customer</option><option value="PL">Product · Location</option><option value="P">Product</option></select></div>
+  <div style="flex:0"><a id="export" data-testid="export-csv" class="primary" style="display:inline-block;padding:8px 16px;background:var(--brand);color:#fff;border-radius:6px;text-decoration:none;margin-top:12px"></a></div>
+</div></div>
+<div class="grid">
+  <div class="card"><div class="muted" data-testid="total-label"></div><div class="kpi" data-testid="grand-total"></div></div>
+  <div class="card"><div class="muted" data-testid="value-label"></div><div class="kpi" data-testid="grand-value"></div></div>
+</div>
+<div class="card" style="overflow-x:auto"><table data-testid="forecast-table"><thead><tr id="head"></tr></thead><tbody></tbody></table></div>
+</main>
+<script>
+let LEVEL = "PLC", MONTHS = [];
+const KEYS = { PLC: ["product", "location", "customer"], PL: ["product", "location"], P: ["product"] };
+function rowEl(r, keys, cls) {
+  return el("tr", { testid: "row-" + r.key, class: cls || "" }, ...keys.map(k => el("td", {}, r[k])),
+    ...MONTHS.map(m => el("td", { testid: "m-" + m }, fmtNum(r.values[m]))), el("td", { testid: "total" }, fmtNum(r.total)), el("td", { testid: "value" }, fmtMoney(r.value)));
+}
+async function load() {
+  LEVEL = $("#level").value; const { data } = await API.get("/api/forecast?level=" + LEVEL); MONTHS = data.months;
+  const keys = KEYS[LEVEL]; const head = $("#head"); head.innerHTML = "";
+  [...keys.map(k => k[0].toUpperCase() + k.slice(1)), ...MONTHS, t("total"), t("value")].forEach(h => head.append(el("th", {}, h)));
+  const tbody = $('[data-testid="forecast-table"] tbody'); tbody.innerHTML = "";
+  for (const r of data.rows) {
+    const tr = rowEl(r, keys, LEVEL === "PL" ? "clickable" : ""); tbody.append(tr);
+    if (LEVEL === "PL") tr.addEventListener("click", async () => {
+      const open = tr.dataset.open === "1"; document.querySelectorAll(`tr[data-parent="${r.key}"]`).forEach(c => c.remove());
+      if (open) { tr.dataset.open = "0"; return; }
+      const kids = (await API.get("/api/forecast?level=PLC")).data.rows.filter(c => c.product === r.product && c.location === r.location);
+      let anchor = tr; kids.forEach(c => { const ce = rowEl({ ...c, location: c.customer }, keys, "child"); ce.dataset.parent = r.key; ce.dataset.testid = "child-" + c.key; anchor.after(ce); anchor = ce; });
+      tr.dataset.open = "1"; });
+  }
+  $('[data-testid="grand-total"]').textContent = fmtNum(data.grand_total);
+  $('[data-testid="grand-value"]').textContent = fmtMoney(data.grand_value);
+  $("#export").href = "/api/forecast/export?level=" + LEVEL;
+}
+if (shell("forecast")) {
+  $('[data-testid="page-title"]').textContent = t("forecast"); $('[data-testid="total-label"]').textContent = t("total");
+  $('[data-testid="value-label"]').textContent = t("value"); $("#export").textContent = t("export");
+  $("#export").addEventListener("click", async (e) => { e.preventDefault();
+    const res = await fetch($("#export").href, { headers: { Authorization: "Bearer " + API.token() } }); const blob = await res.blob();
+    const a = el("a", { href: URL.createObjectURL(blob), download: `forecast_${LEVEL}.csv` }); document.body.append(a); a.click(); a.remove(); });
+  $("#level").addEventListener("change", load); load();
+}
+</script></body></html>
